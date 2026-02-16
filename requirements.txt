@@ -1,0 +1,8 @@
+# Config-driven PySpark pipeline (Python 3.8+)
+# Install: pip install -r requirements.txt
+
+# Spark for DataFrame and local execution
+pyspark>=3.4.0
+
+# Config file parsing (YAML/JSON)
+PyYAML>=6.0

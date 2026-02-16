@@ -1,0 +1,261 @@
+{
+  "app_name": "PySpark Pipeline from Mainframe Diagram",
+  "inputs": {
+    "master_customer": {
+      "path": "data/master_customer.csv",
+      "format": "csv",
+      "options": {
+        "header": true
+      },
+      "schema": {
+        "columns": [
+          {
+            "name": "id",
+            "start": 0,
+            "length": 6,
+            "type": "string"
+          },
+          {
+            "name": "cust_id",
+            "start": 6,
+            "length": 5,
+            "type": "string"
+          },
+          {
+            "name": "cust_name",
+            "start": 11,
+            "length": 20,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "start": 31,
+            "length": 5,
+            "type": "string"
+          },
+          {
+            "name": "amount",
+            "start": 36,
+            "length": 10,
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "start": 46,
+            "length": 10,
+            "type": "string"
+          },
+          {
+            "name": "date_col",
+            "start": 56,
+            "length": 10,
+            "type": "string"
+          },
+          {
+            "name": "key",
+            "start": 66,
+            "length": 5,
+            "type": "string"
+          }
+        ],
+        "lrecl": 80
+      }
+    },
+    "prod_customer_vsam": {
+      "path": "data/prod_customer_vsam.dat",
+      "format": "vsam",
+      "options": {
+        "lrecl": 61,
+        "ebcdic_codepage": "cp037",
+        "columns": [
+          {
+            "name": "id",
+            "start": 0,
+            "length": 6,
+            "type": "string"
+          },
+          {
+            "name": "cust_id",
+            "start": 6,
+            "length": 5,
+            "type": "string"
+          },
+          {
+            "name": "cust_name",
+            "start": 11,
+            "length": 20,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "start": 31,
+            "length": 5,
+            "type": "string"
+          },
+          {
+            "name": "amount",
+            "start": 36,
+            "length": 5,
+            "type": "comp3"
+          },
+          {
+            "name": "value",
+            "start": 41,
+            "length": 5,
+            "type": "comp3"
+          },
+          {
+            "name": "date_col",
+            "start": 46,
+            "length": 10,
+            "type": "string"
+          },
+          {
+            "name": "key",
+            "start": 56,
+            "length": 5,
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "outputs": {
+    "temp1": {
+      "path": "output/temp1",
+      "format": "csv",
+      "mode": "overwrite",
+      "options": {
+        "header": true
+      },
+      "dataframe": "temp1"
+    },
+    "report_daily": {
+      "path": "output/report_daily",
+      "format": "csv",
+      "mode": "overwrite",
+      "options": {
+        "header": true
+      },
+      "dataframe": "report_daily"
+    },
+    "temp2": {
+      "path": "output/temp2",
+      "format": "csv",
+      "mode": "overwrite",
+      "options": {
+        "header": true
+      },
+      "dataframe": "temp2"
+    },
+    "temp3": {
+      "path": "output/temp3",
+      "format": "csv",
+      "mode": "overwrite",
+      "options": {
+        "header": true
+      },
+      "dataframe": "temp3"
+    },
+    "backup_report_g0001v00": {
+      "path": "output/backup_report_g0001v00",
+      "format": "csv",
+      "mode": "overwrite",
+      "options": {
+        "header": true
+      },
+      "dataframe": "report_daily",
+      "backup": {
+        "daily": "backup/daily/backup_report_g0001v00/{yyyy}-{mm}-{dd}",
+        "month_end": "backup/month_end/backup_report_g0001v00/{yyyy}-{mm}"
+      }
+    }
+  },
+  "transformations": [
+    {
+      "type": "select",
+      "dataframe": "master_customer",
+      "output": "temp1",
+      "params": {
+        "columns": []
+      }
+    },
+    {
+      "type": "date_format",
+      "dataframe": "temp1",
+      "output": "report_daily",
+      "params": {
+        "column": "date_col",
+        "input_format": "yyyy-MM-dd",
+        "output_format": "dd/MM/yyyy",
+        "output_column": "date_formatted",
+        "source_type": "string"
+      }
+    },
+    {
+      "type": "calculation",
+      "dataframe": "report_daily",
+      "output": "report_daily",
+      "params": {
+        "name": "value_tax",
+        "expr": "value * 1.0"
+      }
+    },
+    {
+      "type": "select",
+      "dataframe": "report_daily",
+      "output": "report_daily",
+      "params": {
+        "columns": []
+      }
+    },
+    {
+      "type": "aggregate",
+      "dataframe": "report_daily",
+      "output": "report_daily",
+      "params": {
+        "group_by": [
+          "region"
+        ],
+        "aggs": {
+          "amount": "sum",
+          "id": "count"
+        }
+      }
+    },
+    {
+      "type": "sort",
+      "dataframe": "temp1",
+      "output": "temp2",
+      "params": {
+        "columns": [
+          {
+            "column": "key",
+            "ascending": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "sort",
+      "dataframe": "temp2",
+      "output": "temp3",
+      "params": {
+        "columns": [
+          {
+            "column": "key",
+            "ascending": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "select",
+      "dataframe": "temp3",
+      "output": "temp3",
+      "params": {
+        "columns": []
+      }
+    }
+  ]
+}
