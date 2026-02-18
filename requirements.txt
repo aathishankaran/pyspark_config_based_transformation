@@ -1,8 +1,9 @@
 # Config-driven PySpark pipeline (Python 3.8+)
 # Install: pip install -r requirements.txt
+# Windows + Python 3.12 + Java 17: use this file; PySpark 4.x fixes typing.io for Python 3.12.
 
-# Spark for DataFrame and local execution
-pyspark>=3.4.0
+# Spark for DataFrame and local execution (4.x = Python 3.12 + Java 17)
+pyspark>=4.0.0
 
 # Config file parsing (YAML/JSON)
 PyYAML>=6.0
