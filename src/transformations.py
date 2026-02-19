@@ -112,14 +112,21 @@ def apply_union(left: DataFrame, right: DataFrame, params: dict) -> DataFrame:
 def apply_date_format(df: DataFrame, params: dict) -> DataFrame:
     """
     Format date/timestamp column(s). Params: column or columns (list), output_format (str),
-    input_format (str, optional when source is string), source_type (date|timestamp|string).
+    input_format (str, optional when source is string), source_type (date|timestamp|string|current_date).
+    When source_type is current_date, adds a column with current date (no input column).
     """
+    source_type = (params.get("source_type") or "string").lower()
+    default_out_fmt = params.get("output_format") or params.get("format") or "yyyy-MM-dd"
+    out_col = params.get("output_column") or "current_date"
+
+    if source_type == "current_date":
+        # Add column with current date in given format (e.g. yyyyMMdd for YYYYMMDD)
+        return df.withColumn(out_col, F.date_format(F.current_date(), default_out_fmt))
+
     cols = params.get("columns") or (params.get("column") and [params["column"]] or [])
     if not cols:
         return df
-    default_out_fmt = params.get("output_format") or params.get("format") or "yyyy-MM-dd"
     default_in_fmt = params.get("input_format")
-    source_type = (params.get("source_type") or "string").lower()
     for c in cols:
         col_name = c if isinstance(c, str) else c.get("name")
         if not col_name:
